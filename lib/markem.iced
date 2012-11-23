@@ -55,7 +55,7 @@ module.exports=markem=
         console.error stderr
       if stdout?&&stdout.trim().length
         console.log stdout
-    if err?
+    if err?&&stderr?&&stderr.trim().length
       console.error stderr
       utils.rmdirDeep 'markem.out',->
       process.exit 1
