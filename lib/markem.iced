@@ -5,6 +5,7 @@ jade=require 'jade'
 fs=require 'fs'
 marked=require 'marked'
 childprocess=require 'child_process'
+
 module.exports=markem=
   version:  '0.0.1'
   options: null
@@ -16,16 +17,14 @@ module.exports=markem=
     await utils.rmdirDeep 'markem.out',defer err
     console.log "cloning into markem.out"
     branch='gh-pages'
-    await this._git "clone #{fetch} markem.out",null,defer err,out
-    await this._git "branch",'markem.out',defer err,out
-    if !out.match branch
-      console.log "branch #{branch} does not exists, creating..."
-      await this._git "branch #{branch}",'markem.out',defer err
+    await this._git "clone --branch #{branch} #{fetch} markem.out",null,defer err,out
+    await this._git "status",'markem.out',defer err,out
     await this._git "checkout #{branch}",'markem.out',defer err
     console.log "generating content..."
     await this._generate defer()
     await this._git "add --all",'markem.out',defer err
-    await this._git "commit -m 'compiled by markem'",'markem.out',defer err
+    await this._git "commit -m 'compiled by markem'",'markem.out',defer err,out
+    console.log out
     console.log "pushing back into origin..."
     await this._git "push origin #{branch}",'markem.out',defer err
     await utils.rmdirDeep 'markem.out',defer err
@@ -44,11 +43,20 @@ module.exports=markem=
         console.log stdout
       if err?
         console.error err
+        utils.rmdirDeep 'markem.out',->
+        process.exit 1
+        return
     cb(err,stdout,stderr)
   _generate: (cb)->
     await fs.readFile path.join('markem.conf','layout.jade'),'utf8',defer err,layout
-    layout=jade.compile layout,
-      filename:path.join('markem.conf','layout.jade')
+    try
+      layout=jade.compile layout,
+        filename:path.join('markem.conf','layout.jade')
+    catch e
+      console.error e
+      utils.rmdirDeep 'markem.out',->
+      process.exit 1
+      return
     utils.scandir
       path: 'markem.out',
       readFiles:false
@@ -56,6 +64,7 @@ module.exports=markem=
       recurse:false
       next:(err,list)->
         for file,type of list
+          file=path.join 'markem.out',file
           if type=='dir'
             await utils.rmdirDeep file,defer err
           else
@@ -73,15 +82,22 @@ module.exports=markem=
                 if file.match /\.md$/
                   target=path.join 'markem.out',file.replace /\.md$/,'.html'
                 if file in ['READMD','README.md','README.markdown','Readme.md']
-                  target=path.join 'markem.out',file.replace /[^#{path.sep}]*$/,'index.html'
+                  target=path.join 'markem.out',file.replace new RegExp("[^#{path.sep}]*$"),'index.html'
                 if target?
                   await fs.stat file,defer err,fileStat
                   await fs.stat target,defer err,targetStat
                   if err? || Number(fileStat.mtime)-Number(targetStat.mtime)<300
-                    console.log "rendering #{target}"
+                    if markem.options.verbose
+                      console.log "rendering #{target}"
                     await mkdirp path.dirname(target),defer err
                     await fs.readFile file,'utf8',defer err,file
-                    file=layout 
-                      content: marked file
+                    try
+                      file=layout 
+                        content: marked file
+                    catch e
+                      console.err e
+                      utils.rmdirDeep 'markem.out',->
+                      process.exit 1
+                      return
                     await fs.writeFile target,file,'utf8',defer err
             cb()
