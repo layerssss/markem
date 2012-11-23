@@ -11,24 +11,38 @@ module.exports=markem=
   options: null
   run: (options,cb)->
     this.options=options
-    await this._git "remote -v",'.',defer err,out
+    await this._git "remote -v",null,defer err,out
     fetch=out.match(/origin\s*([^\s]*)\s*\(fetch\)/)[1]
     console.log "git url: #{fetch}"
-    await utils.rmdirDeep 'markem.out',defer err
-    console.log "cloning into markem.out"
+
+
     branch='gh-pages'
+    if fetch.match /\.github\.com/
+      branch='master'
+
+    await this._git "status",null,defer err,out
+    curBranch=out.match(/on\s*branch\s*([^\s]*)/i)[1]
+    if curBranch==branch
+      console.err "You are in target branch '#{branch}'. Put your documents in another branch!!!"
+
+
+    await utils.rmdirDeep 'markem.out',defer err
+    console.log "Cloning branch '#{branch}' into 'markem.out'"
     await this._git "clone --branch #{branch} #{fetch} markem.out",null,defer err,out
     await this._git "status",'markem.out',defer err,out
+    if !out.match branch
+      console.log "Branch '#{branch}' does not exists. creating..."
+      await this._git "branch #{branch}",'markem.out',defer err
     await this._git "checkout #{branch}",'markem.out',defer err
-    console.log "generating content..."
+    console.log "Generating content..."
     await this._generate defer()
     await this._git "add --all",'markem.out',defer err
     await this._git "commit -m 'compiled by markem'",'markem.out',defer err,out
     console.log out
-    console.log "pushing back into origin..."
+    console.log "Pushing back into origin..."
     await this._git "push origin #{branch}",'markem.out',defer err
     await utils.rmdirDeep 'markem.out',defer err
-    console.log "done."
+    console.log "Done."
   _git:(command,workTree,cb)->
     if workTree?
       command="git --work-tree #{workTree} --git-dir #{path.join workTree,'.git'} #{command}"
@@ -41,11 +55,11 @@ module.exports=markem=
         console.error stderr
       if stdout?&&stdout.trim().length
         console.log stdout
-      if err?
-        console.error err
-        utils.rmdirDeep 'markem.out',->
-        process.exit 1
-        return
+    if err?
+      console.error stderr
+      utils.rmdirDeep 'markem.out',->
+      process.exit 1
+      return
     cb(err,stdout,stderr)
   _generate: (cb)->
     await fs.readFile path.join('markem.conf','layout.jade'),'utf8',defer err,layout
