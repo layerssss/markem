@@ -1,0 +1,76 @@
+utils=require 'bal-util'
+mkdirp=require 'mkdirp'
+path=require 'path'
+jade=require 'jade'
+fs=require 'fs'
+marked=require 'marked'
+childprocess=require 'child_process'
+module.exports=markem=
+  version:  '0.0.1'
+  options: null
+  run: (options,cb)->
+    this.options=options
+    await this._git "remote -v",'.',defer err,out
+    fetch=out.match(/origin\s*([^\s]*)\s*\(fetch\)/)[1]
+    console.log "git url: #{fetch}"
+    await utils.rmdirDeep 'markem.out',defer err
+    console.log "cloning into markem.out"
+    branch='gh-pages'
+    await this._git "clone #{fetch} markem.out",null,defer err,out
+    await this._git "branch #{branch}",'markem.out',defer err,out
+    # console.log out
+    # if err?
+    #   console.log "branch #{branch} does not exists, creating..."
+    #   await this._git "branch #{branch}",'markem.out',defer err,out
+    #   await this._git "checkout #{branch}",'markem.out',defer err,out
+    # await this._git "status",'markem.out',defer err,out
+    # if branch!=out.match(/on\s*branch\s*([^\s]*)/i)[1]
+    #   console.log "branch #{branch} does not exists, creating..."
+    #   await this._git "branch #{branch}",'markem.out',defer err,out
+    #   console.log out
+      # await this._git "checkout #{branch}",'markem.out',defer err out
+      # console.log out 
+    # await this._generate defer()
+
+  _git:(command,workTree,cb)->
+    if workTree?
+      command="git --work-tree #{workTree} --git-dir #{path.join workTree,'.git'} #{command}"
+    else
+      command="git #{command}"
+    await childprocess.exec command,defer err,out
+    if this.options.verbose
+      console.log "> #{command}"
+      if err?
+        console.log err
+      if out?
+        console.log out
+    cb(err,out)
+  _generate: (cb)->
+    await fs.readFile path.join('markem.conf','layout.jade'),'utf8',defer err,layout
+    layout=jade.compile layout,
+      filename:path.join('markem.conf','layout.jade')
+    utils.scandir
+      path: '.'
+      readFiles: false
+      ignoreHiddenFiles: true
+      next: (err,list) ->
+        for file,type of list
+          if type=='file'&&!file.match /node_modules/
+            target=null
+            if file.match /\.markdown$/
+              target=path.join 'markem.out',file.replace /\.markdown$/,'.html'
+            if file.match /\.md$/
+              target=path.join 'markem.out',file.replace /\.md$/,'.html'
+            if file in ['READMD','README.md','README.markdown','Readme.md']
+              target=path.join 'markem.out',file.replace /[^#{path.sep}]*$/,'index.html'
+            if target?
+              await fs.stat file,defer err,fileStat
+              await fs.stat target,defer err,targetStat
+              if err? || Number(fileStat.mtime)-Number(targetStat.mtime)<300
+                console.log "rendering #{target}"
+                await mkdirp path.dirname(target),defer err
+                await fs.readFile file,'utf8',defer err,file
+                file=layout 
+                  content: marked file
+                await fs.writeFile target,file,'utf8',defer err
+        cb()

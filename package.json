@@ -1,0 +1,13 @@
+{
+  "name": "markem",
+  "version": "0.0.1",
+  "description": "",
+  "dependencies":{
+    "iced-coffee-script":"latest",
+    "jade":"latest",
+    "commander":"latest",
+    "bal-util":"latest",
+    "mkdirp":"latest",
+    "marked":"latest"
+  }
+}
