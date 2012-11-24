@@ -2,6 +2,17 @@
   "name": "markem",
   "version": "0.0.1",
   "description": "",
+  "author": {
+    "name": "Michael Yin",
+    "email": "layerssss@gmail.com"
+  },
+  "bin": {
+    "markem": "./bin/markem"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/layerssss/markem.git"
+  },
   "dependencies":{
     "iced-coffee-script":"latest",
     "jade":"latest",
@@ -9,5 +20,6 @@
     "bal-util":"latest",
     "mkdirp":"latest",
     "marked":"latest"
-  }
+  },
+  "readmeFilename": "README.md",
 }

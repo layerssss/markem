@@ -10,6 +10,9 @@ module.exports=markem=
   version:  '0.0.1'
   options: null
   run: (options,cb)->
+    this.options=options
+
+    # serving skeletons
     await fs.exists path.join('markem.conf','layout.jade'),defer exists
     if !exists
       await fs.readdir path.join(__dirname,'..','skeletons'),defer err,layouts
@@ -46,7 +49,6 @@ module.exports=markem=
 
 
     # detect Git remote
-    this.options=options
     await this._git "remote -v",null,defer err,out
     fetch=out.match(/origin\s*([^\s]*)\s*\(fetch\)/)[1]
     console.log "git url: #{fetch}"
@@ -92,6 +94,13 @@ module.exports=markem=
 
     await utils.rmdirDeep 'markem.out',defer err
     console.log "Done."
+
+  # calling git commands
+  # params:
+  #     command: git sub-commands and options
+  #     workTree: git working copy location, default to null
+  # callback:
+  #     cb(err,stdout,stderr)
   _git:(command,workTree,cb)->
     if workTree?
       command="git --work-tree #{workTree} --git-dir #{path.join workTree,'.git'} #{command}"
@@ -123,37 +132,71 @@ module.exports=markem=
             await utils.rmdirDeep file,defer err
           else
             await utils.unlink file,defer err
+        await utils.cpdir 'markem.conf','markem.out',defer err
+        await utils.unlink path.join('markem.out','layout.jade'),defer err
         utils.scandir
           path: '.'
           readFiles: false
           ignoreHiddenFiles: true
           next: (err,list) ->
-            for file,type of list
-              if type=='file'&&!file.match /node_modules/
+            globals={}
+            documents={}
+
+            # initialize some basic stuff
+            for relative,type of list
+              if type=='file'&&!relative.match /node_modules/
                 target=null
-                if file.match /\.markdown$/
-                  target=path.join 'markem.out',file.replace /\.markdown$/,'.html'
-                if file.match /\.md$/
-                  target=path.join 'markem.out',file.replace /\.md$/,'.html'
-                if file in ['READMD','README.md','README.markdown','Readme.md']
-                  target=path.join 'markem.out',file.replace new RegExp("[^#{path.sep}]*$"),'index.html'
+                if relative.match /\.markdown$/
+                  target=path.join 'markem.out',relative.replace /\.markdown$/,'.html'
+                if relative.match /\.md$/
+                  target=path.join 'markem.out',relative.replace /\.md$/,'.html'
+                if relative.match new RegExp("readme\\.md$",'i')
+                  target=path.join 'markem.out',relative.replace new RegExp("[^#{path.sep}]*$"),'index.html'
                 if target?
-                  await fs.stat file,defer err,fileStat
-                  await fs.stat target,defer err,targetStat
-                  if err? || Number(fileStat.mtime)-Number(targetStat.mtime)<300
-                    if markem.options.verbose
-                      console.log "rendering #{target}"
-                    await mkdirp path.dirname(target),defer err
-                    await fs.readFile file,'utf8',defer err,file
-                    try
-                      file=marked file
-                      file=layout
-                        title: (file.match(/<h1>([^<]*)<\/h1>/m)||[null])[1] 
-                        content: file
-                    catch e
-                      console.err e
-                      utils.rmdirDeep 'markem.out',->
-                      process.exit 1
-                      return
-                    await fs.writeFile target,file,'utf8',defer err
+                  document=
+                    dirs:[]
+                    files:[]
+                    pathFile:target.replace(new RegExp(path.sep,'g'),'/').replace(/^markem\.out/,'')
+                    target:target
+                    globals:globals
+                  document.path=document.pathFile.replace(/\/index\.html$/,'/')
+                  document.root=path.relative document.path.replace(/\/[^\/]*$/,'/'),'\/'
+                  if !document.root.length
+                    document.root='.'
+                  documents[document.path]=document
+                  await fs.readFile relative,'utf8',defer err,document.source
+
+
+            # build relationships,content,title between documents
+            for p,document of documents
+              document.content=marked document.source
+              document.title=(document.content.match(/<h1>([^<]*)<\/h1>/m)||[null,'untitled'])[1] 
+              if p=='/'
+                globals.root=document
+              if p.match /\/$/
+                document.parent=documents[p.replace(/[^\/]*\/$/,'')]
+                document.type='dir'
+              else
+                document.parent=documents[p.replace(/[^\/]+$/,'')]
+                document.type='file'
+              if document.parent?
+                if document.type=='dir'
+                  document.parent.dirs.push document
+                else
+                  document.parent.files.push document
+
+
+            # render each documents
+            for p,document of documents
+              if markem.options.verbose
+                console.log "rendering #{document.target}"
+              await mkdirp path.dirname(document.target),defer err
+              try
+                document.output=layout document
+              catch e
+                console.error e
+                utils.rmdirDeep 'markem.out',->
+                process.exit 1
+                return
+              await fs.writeFile document.target,document.output,'utf8',defer err
             cb()

@@ -21,4 +21,3 @@ Then head to your local Github repo, type
     $ markem
 
 Whaooo~, if everything goes fine, you shall see these:
-

@@ -2,13 +2,13 @@
 html(lang='en')
   head
       meta(charset='utf-8')
-      title TITLE
+      title #{title}
       meta(name='viewport', content='width=device-width, initial-scale=1.0')
       meta(name="description",content='DESCRIPTION')
       meta(name="keywords",content='KEYWORDS')
       meta(name="author",content='AUTHOR')
-      link(rel='stylesheet',href='/css/bootstrap.css')
-      link(rel='stylesheet',href='/css/bootstrap-responsive.css')
+      link(rel='stylesheet',href='#{root}/css/bootstrap.css')
+      link(rel='stylesheet',href='#{root}/css/bootstrap-responsive.css')
   body
     .container.navbar-wrapper
       .navbar
@@ -17,15 +17,22 @@ html(lang='en')
             span.icon-bar
             span.icon-bar
             span.icon-bar
-          a.brand(href='./') TITLE
+          a.brand(href='#{root}/') Hello
           .nav-collapse.collapse
             ul.nav
-              li
-                a(href='./首页') 团队成员
+              for dir in globals.root.dirs
+                li
+                  a(href='#{root}#{dir.path}') #{dir.title}
       artical !{content}
+      for dir in dirs
+        p
+          a(href='#{root}#{dir.path}') #{dir.title}
+      for file in files
+        p
+          a(href='#{root}#{file.path}') #{file.title}
       footer
         p
           | © 2012  YOURNAME
-    script(src='/js/jquery.js')
-    script(src='/js/bootstrap.js')
-    script(src='/js/modernizr.js')
+    script(src='#{root}/js/jquery.js')
+    script(src='#{root}/js/bootstrap.js')
+    script(src='#{root}/js/modernizr.js')
