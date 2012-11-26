@@ -8,11 +8,22 @@ html(lang='en')
       meta(name="keywords",content='KEYWORDS')
       meta(name="author",content='AUTHOR')
       link(rel='stylesheet',href='#{root}/css/bootstrap.css')
+      style
+        body {
+          padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        }
+        #github{
+          z-index:10000;
+          position:fixed;
+          left:0;
+          top:0;
+        }
       link(rel='stylesheet',href='#{root}/css/bootstrap-responsive.css')
   body
-    .container.navbar-wrapper
-      .navbar
-        .navbar-inner
+    
+    .navbar.navbar-inverse.navbar-fixed-top
+      .navbar-inner
+        .container
           a.btn.btn-navbar(data-toggle='collapse', data-target='.nav-collapse')
             span.icon-bar
             span.icon-bar
@@ -23,6 +34,7 @@ html(lang='en')
               for dir in globals.root.dirs
                 li
                   a(href='#{root}#{dir.path}') #{dir.title}
+    .container
       artical !{content}
       for dir in dirs
         p
@@ -36,3 +48,5 @@ html(lang='en')
     script(src='#{root}/js/jquery.js')
     script(src='#{root}/js/bootstrap.js')
     script(src='#{root}/js/modernizr.js')
+    a(id="github",href="https://github.com/layerssss/markem/blob/master#{pathSource}")
+      img(src="http://s3.amazonaws.com/github/ribbons/forkme_left_red_aa0000.png",alt="Fork me on GitHub")

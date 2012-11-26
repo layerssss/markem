@@ -6,6 +6,7 @@ var options = {};
 program
   .version(markem.version)
   .usage('[options]')
+  .option('-o, --out <dir>', 'output the generated site to <dir> instead of pushing to GtihubPage')
   .option('-v, --verbose', 'output additional logs');
 
 program.parse(process.argv);
