@@ -7,7 +7,7 @@ marked=require 'marked'
 childprocess=require 'child_process'
 
 module.exports=markem=
-  version:  '0.0.2'
+  version:  '0.0.3'
   options: null
   run: (options,cb)->
 
