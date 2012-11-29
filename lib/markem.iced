@@ -191,6 +191,11 @@ module.exports=markem=
                 else
                   document.parent.files.push document
 
+            try
+              markemConf=require path.join process.cwd(),'markem.conf'
+            catch e
+            if markemConf? and markemConf.preRender?
+              await markemConf.preRender globals,defer err
 
             # render each documents
             for p,document of documents
