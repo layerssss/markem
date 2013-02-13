@@ -6,6 +6,7 @@
     "name": "Michael Yin",
     "email": "layerssss@gmail.com"
   },
+  "main": "index.js"
   "bin": {
     "markem": "./bin/markem"
   },
