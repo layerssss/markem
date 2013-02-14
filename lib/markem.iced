@@ -6,14 +6,15 @@ fs=require 'fs'
 marked=require 'marked'
 childprocess=require 'child_process'
 
-module.exports=markem=
-  version:  '0.0.3'
-  options: null
-  run: (options,cb)->
+module.exports = class markem
+  @version:  require('../package.json').version
+  @options: null
+  @run: (options,cb)->
 
-    this.options=options
-    this.tmp=options.out||'markem.out'
-    self=this
+    @options = options
+    @tmp = options.out||'markem.out'
+    @source = options.source||'.'
+
     # serving skeletons
     await fs.exists path.join('markem.conf','layout.jade'),defer exists
     if !exists
@@ -50,7 +51,7 @@ module.exports=markem=
 
     if !options.out?
       # detect Git remote
-      await this._git "remote -v",null,defer err,out
+      await @_git "remote -v",null,defer err,out
       fetch=out.match(/origin\s*([^\s]*)\s*\(fetch\)/)[1]
       console.log "git url: #{fetch}"
 
@@ -60,43 +61,43 @@ module.exports=markem=
         branch='master'
 
       # make sure users dont put documents in their GithubPage branch
-      await this._git "status",null,defer err,out
+      await @_git "status",null,defer err,out
       curBranch=out.match(/on\s*branch\s*([^\s]*)/i)[1]
       if curBranch==branch
         console.err "You are in target branch '#{branch}'. Put your documents in another branch!!!"
 
       # get current gh-pages (make sure git clone done well)
-      await mkdirp self.tmp,defer err
-      await utils.rmdirDeep self.tmp,defer err
-      console.log "Cloning branch '#{branch}' into '#{self.tmp}'"
-      await this._git "clone --branch #{branch} #{fetch} #{self.tmp}",null,defer err,out
+      await mkdirp @tmp,defer err
+      await utils.rmdirDeep @tmp,defer err
+      console.log "Cloning branch '#{branch}' into '#{@tmp}'"
+      await @_git "clone --branch #{branch} #{fetch} #{@tmp}",null,defer err,out
 
       # make sure GithubPage branch exists
-      await this._git "status",self.tmp,defer err,out
+      await @_git "status",@tmp,defer err,out
       if !out.match branch
         console.log "Branch '#{branch}' does not exists. creating..."
-        await this._git "branch #{branch}",self.tmp,defer err
-      await this._git "checkout #{branch}",self.tmp,defer err
+        await @_git "branch #{branch}",@tmp,defer err
+      await @_git "checkout #{branch}",@tmp,defer err
     else
-      await mkdirp self.tmp,defer err
+      await mkdirp @tmp,defer err
 
 
     # generate content
     console.log "Generating content..."
-    await this._generate layout,defer()
+    await @_generate layout,defer()
 
     if !options.out?
       # commit&push back to Github
-      await this._git "add --all",self.tmp,defer err
-      await this._git "commit -m 'compiled by markem'",self.tmp,defer err,out
+      await @_git "add --all",@tmp,defer err
+      await @_git "commit -m 'compiled by markem'",@tmp,defer err,out
       console.log out
       console.log "Pushing back into origin..."
-      await this._git "push origin #{branch}",self.tmp,defer err
+      await @_git "push origin #{branch}",@tmp,defer err
 
 
 
 
-      await utils.rmdirDeep self.tmp,defer err
+      await utils.rmdirDeep @tmp,defer err
       console.log "Done."
 
   # calling git commands
@@ -105,13 +106,13 @@ module.exports=markem=
   #     workTree: git working copy location, default to null
   # callback:
   #     cb(err,stdout,stderr)
-  _git:(command,workTree,cb)->
+  @_git:(command,workTree,cb)->
     if workTree?
       command="git --work-tree #{workTree} --git-dir #{path.join workTree,'.git'} #{command}"
     else
       command="git #{command}"
     await childprocess.exec command,defer err,stdout,stderr
-    if this.options.verbose
+    if @options.verbose
       console.log "> #{command}"
       if stderr?&&stderr.trim().length
         console.error stderr
@@ -123,24 +124,23 @@ module.exports=markem=
       process.exit 1
       return
     cb(err,stdout,stderr)
-  _generate: (layout,cb)->
-    self=this
+  @_generate: (layout,cb)->
     utils.scandir
-      path: self.tmp,
+      path: @tmp,
       readFiles:false
       ignoreHiddenFiles: true
       recurse:false
       next:(err,list)->
         for file,type of list
-          file=path.join self.tmp,file
+          file=path.join @tmp,file
           if type=='dir'
             await utils.rmdirDeep file,defer err
           else
             await utils.unlink file,defer err
-        await utils.cpdir 'markem.conf',self.tmp,defer err
-        await utils.unlink path.join(self.tmp,'layout.jade'),defer err
+        await utils.cpdir 'markem.conf',@tmp,defer err
+        await utils.unlink path.join(@tmp,'layout.jade'),defer err
         utils.scandir
-          path: '.'
+          path: @source
           readFiles: false
           ignoreHiddenFiles: true
           next: (err,list) ->
@@ -152,17 +152,17 @@ module.exports=markem=
               if type=='file'&&!relative.match /node_modules/
                 target=null
                 if relative.match /\.markdown$/
-                  target=path.join self.tmp,relative.replace /\.markdown$/,'.html'
+                  target=path.join @tmp,relative.replace /\.markdown$/,'.html'
                 if relative.match /\.md$/
-                  target=path.join self.tmp,relative.replace /\.md$/,'.html'
+                  target=path.join @tmp,relative.replace /\.md$/,'.html'
                 if relative.match new RegExp("readme\\.md$",'i')
-                  target=path.join self.tmp,relative.replace new RegExp("[^#{path.sep}]*$"),'index.html'
+                  target=path.join @tmp,relative.replace new RegExp("[^#{path.sep}]*$"),'index.html'
                 if target?
                   document=
                     dirs:[]
                     files:[]
                     pathSource:'/'+relative
-                    pathFile:'/'+path.relative(self.tmp,target)
+                    pathFile:'/'+path.relative(@tmp,target)
                     target:target
                     globals:globals
                   document.path=document.pathFile.replace(/\/index\.html$/,'/')
@@ -206,7 +206,7 @@ module.exports=markem=
                 document.output=layout document
               catch e
                 console.error e
-                utils.rmdirDeep self.tmp,->
+                utils.rmdirDeep @tmp,->
                 process.exit 1
                 return
               await fs.writeFile document.target,document.output,'utf8',defer err
