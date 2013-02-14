@@ -125,89 +125,91 @@ module.exports = class markem
       return
     cb(err,stdout,stderr)
   @_generate: (layout,cb)->
+    await fs.readdir @tmp,defer err, list
+    for file in list
+      continue if file.match /^\./
+      await fs.stat path.join(@tmp,file),defer err, stat
+      if stat.isDirectory()
+        console.log "rm -Rf #{file}" if @options.verbose
+        await utils.rmdirDeep file,defer err
+      else
+        console.log "rm -f #{file}" if @options.verbose
+        await utils.unlink file,defer err
+
+    console.log "cp -R markem.conf #{@tmp}" if @options.verbose
+    await utils.cpdir 'markem.conf',@tmp,defer err
+
+    console.log "rm -f #{path.join(@tmp,'layout.jade')}" if @options.verbose
+    await utils.unlink path.join(@tmp,'layout.jade'),defer err
     utils.scandir
-      path: @tmp,
-      readFiles:false
+      path: @source
+      readFiles: false
       ignoreHiddenFiles: true
-      recurse:false
-      next:(err,list)->
-        for file,type of list
-          file=path.join @tmp,file
-          if type=='dir'
-            await utils.rmdirDeep file,defer err
+      next: (err,list) ->
+        globals={}
+        documents={}
+
+        # initialize some basic stuff
+        for relative,type of list
+          if type=='file'&&!relative.match /node_modules/
+            target=null
+            if relative.match /\.markdown$/
+              target=path.join @tmp,relative.replace /\.markdown$/,'.html'
+            if relative.match /\.md$/
+              target=path.join @tmp,relative.replace /\.md$/,'.html'
+            if relative.match new RegExp("readme\\.md$",'i')
+              target=path.join @tmp,relative.replace new RegExp("[^#{path.sep}]*$"),'index.html'
+            if target?
+              document=
+                dirs:[]
+                files:[]
+                pathSource:'/'+relative
+                pathFile:'/'+path.relative(@tmp,target)
+                target:target
+                globals:globals
+              document.path=document.pathFile.replace(/\/index\.html$/,'/')
+              document.root=path.relative document.path.replace(/\/[^\/]*$/,'/'),'\/'
+              if !document.root.length
+                document.root='.'
+              documents[document.path]=document
+              await fs.readFile relative,'utf8',defer err,document.source
+
+
+        # build relationships,content,title between documents
+        for p,document of documents
+          document.content=marked document.source
+          document.title=(document.content.match(/<h1>([^<]*)<\/h1>/m)||[null,'untitled'])[1] 
+          if p=='/'
+            globals.root=document
+          if p.match /\/$/
+            document.parent=documents[p.replace(/[^\/]*\/$/,'')]
+            document.type='dir'
           else
-            await utils.unlink file,defer err
-        await utils.cpdir 'markem.conf',@tmp,defer err
-        await utils.unlink path.join(@tmp,'layout.jade'),defer err
-        utils.scandir
-          path: @source
-          readFiles: false
-          ignoreHiddenFiles: true
-          next: (err,list) ->
-            globals={}
-            documents={}
+            document.parent=documents[p.replace(/[^\/]+$/,'')]
+            document.type='file'
+          if document.parent?
+            if document.type=='dir'
+              document.parent.dirs.push document
+            else
+              document.parent.files.push document
 
-            # initialize some basic stuff
-            for relative,type of list
-              if type=='file'&&!relative.match /node_modules/
-                target=null
-                if relative.match /\.markdown$/
-                  target=path.join @tmp,relative.replace /\.markdown$/,'.html'
-                if relative.match /\.md$/
-                  target=path.join @tmp,relative.replace /\.md$/,'.html'
-                if relative.match new RegExp("readme\\.md$",'i')
-                  target=path.join @tmp,relative.replace new RegExp("[^#{path.sep}]*$"),'index.html'
-                if target?
-                  document=
-                    dirs:[]
-                    files:[]
-                    pathSource:'/'+relative
-                    pathFile:'/'+path.relative(@tmp,target)
-                    target:target
-                    globals:globals
-                  document.path=document.pathFile.replace(/\/index\.html$/,'/')
-                  document.root=path.relative document.path.replace(/\/[^\/]*$/,'/'),'\/'
-                  if !document.root.length
-                    document.root='.'
-                  documents[document.path]=document
-                  await fs.readFile relative,'utf8',defer err,document.source
+        try
+          markemConf=require path.join process.cwd(),'markem.conf'
+        catch e
+        if markemConf? and markemConf.preRender?
+          await markemConf.preRender globals,defer err
 
-
-            # build relationships,content,title between documents
-            for p,document of documents
-              document.content=marked document.source
-              document.title=(document.content.match(/<h1>([^<]*)<\/h1>/m)||[null,'untitled'])[1] 
-              if p=='/'
-                globals.root=document
-              if p.match /\/$/
-                document.parent=documents[p.replace(/[^\/]*\/$/,'')]
-                document.type='dir'
-              else
-                document.parent=documents[p.replace(/[^\/]+$/,'')]
-                document.type='file'
-              if document.parent?
-                if document.type=='dir'
-                  document.parent.dirs.push document
-                else
-                  document.parent.files.push document
-
-            try
-              markemConf=require path.join process.cwd(),'markem.conf'
-            catch e
-            if markemConf? and markemConf.preRender?
-              await markemConf.preRender globals,defer err
-
-            # render each documents
-            for p,document of documents
-              if markem.options.verbose
-                console.log "rendering #{document.target}"
-              await mkdirp path.dirname(document.target),defer err
-              try
-                document.output=layout document
-              catch e
-                console.error e
-                utils.rmdirDeep @tmp,->
-                process.exit 1
-                return
-              await fs.writeFile document.target,document.output,'utf8',defer err
-            cb()
+        # render each documents
+        for p,document of documents
+          
+          console.log "rendering #{document.target}" if markem.options.verbose
+          await mkdirp path.dirname(document.target),defer err
+          try
+            document.output=layout document
+          catch e
+            console.error e
+            utils.rmdirDeep @tmp,->
+            process.exit 1
+            return
+          await fs.writeFile document.target,document.output,'utf8',defer err
+        cb()
