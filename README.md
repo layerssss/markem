@@ -77,14 +77,15 @@ Installation
 Usage
 ---------------------------------------------------
      
-     Usage: markem [options]
+      Usage: markem [options]
 
       Options:
 
-        -h, --help       output usage information
-        -V, --version    output the version number
-        -o, --out <dir>  output the generated site to <dir> instead of pushing to GtihubPage
-        -v, --verbose    output additional logs
+        -h, --help          output usage information
+        -V, --version       output the version number
+        -o, --out <dir>     output the generated site to <dir> instead of pushing to GtihubPage
+        -v, --verbose       output additional logs
+        -s, --source <dir>  use specific doc source instead of cwd
 
 License
 ---------------------------------------------------
