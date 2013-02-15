@@ -101,6 +101,8 @@ module.exports = class markem
       await utils.rmdirDeep @tmp,defer err
       console.log "Done."
 
+    cb()
+
   # calling git commands
   # params:
   #     command: git sub-commands and options
