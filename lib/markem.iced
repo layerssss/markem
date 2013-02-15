@@ -16,10 +16,8 @@ module.exports = class markem
     @tmp = options.out||'markem.out'
     @source = path.resolve options.source||'.'
 
-    await @_spawn 'ls',[],defer err
-
     # serving skeletons
-    await fs.exists path.join('markem.conf','layout.jade'),defer exists
+    await fs.exists path.join(@source, 'markem.conf','layout.jade'),defer exists
     if !exists
       await fs.readdir path.join(__dirname,'..','skeletons'),defer err,layouts
       console.log "Seems like you havn't got a layout for your site. You can choose one skeleton from below."
@@ -39,14 +37,14 @@ module.exports = class markem
         process.exit 1
         return
       await mkdirp 'markem.conf',defer err
-      await utils.cpdir path.join(__dirname,'..','skeletons',layout),'markem.conf',defer err
+      await utils.cpdir path.join(__dirname,'..','skeletons',layout),path.join(@source,'markem.conf'),defer err
       console.log "'markem.conf' created."
 
     # prepare template
-    await fs.readFile path.join('markem.conf','layout.jade'),'utf8',defer err,layout
+    await fs.readFile path.join(@source,'markem.conf','layout.jade'),'utf8',defer err,layout
     try
       layout=jade.compile layout,
-        filename:path.join('markem.conf','layout.jade')
+        filename:path.join(@source,'markem.conf','layout.jade')
     catch e
       console.error e
       process.exit 1
@@ -54,7 +52,7 @@ module.exports = class markem
 
     if !options.out?
       # detect Git remote
-      await @_git ['remote','-v'],null,defer err,out
+      await @_git ['remote','-v'],@source,defer err,out
       fetch=out.match(/origin\s+([^\s]+)\s+\(fetch\)/)[1]
       console.log "git url: #{fetch}"
 
@@ -64,7 +62,7 @@ module.exports = class markem
         branch='master'
 
       # make sure users dont put documents in their GithubPage branch
-      await @_git ['status'],null,defer err,out
+      await @_git ['status'],@source,defer err,out
       curBranch=out.match(/on\s*branch\s*([^\s]*)/i)[1]
       if curBranch==branch
         console.err "You are in target branch '#{branch}'. Put your documents in another branch!!!"
