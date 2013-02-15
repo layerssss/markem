@@ -182,6 +182,7 @@ module.exports = class markem
             document.root='.'
           documents[document.path]=document
           await fs.readFile path.join(@source, relative),'utf8',defer err,document.source
+          await fs.stat path.join(@source, relative), defer err, document.stats
 
 
     # build relationships,content,title between documents
