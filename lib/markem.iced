@@ -125,7 +125,7 @@ module.exports = class markem
     cb err, stdout
 
   @_spawn:(exec, args, cb)->
-    console.log "> #{exec} #{args.join ' '}"
+    console.log "> #{exec} #{args.join ' '}" if @options.verbose
     proc = childprocess.spawn exec, args,
       cwd: process.cwd()
     proc.stdout.setEncoding 'utf8'
