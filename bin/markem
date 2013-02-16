@@ -8,7 +8,8 @@ program
   .usage('[options]')
   .option('-o, --out <dir>', 'output the generated site to <dir> instead of pushing to GtihubPage')
   .option('-v, --verbose', 'output additional logs')
-  .option('-s, --source <dir>', 'use specific doc source instead of cwd');
+  .option('-s, --source <dir>', 'use specific doc source instead of cwd')
+  .option('-j, --json <json>', 'additional data bound to globals');
 
 program.parse(process.argv);
 markem.run(program,function(){});

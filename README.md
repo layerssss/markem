@@ -86,6 +86,7 @@ Usage
         -o, --out <dir>     output the generated site to <dir> instead of pushing to GtihubPage
         -v, --verbose       output additional logs
         -s, --source <dir>  use specific doc source instead of cwd
+        -j, --json <json>   additional data bound to globals
 
 License
 ---------------------------------------------------

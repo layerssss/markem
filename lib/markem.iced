@@ -15,6 +15,7 @@ module.exports = class markem
     @options = options
     @tmp = options.out||'markem.out'
     @source = path.resolve options.source||'.'
+    @json = JSON.parse options.json||'{}'
 
     # serving skeletons
     await fs.exists path.join(@source, 'markem.conf','layout.jade'),defer exists
@@ -155,7 +156,7 @@ module.exports = class markem
       readFiles: false
       ignoreHiddenFiles: true
       next: defer err,list
-    globals={}
+    globals=@json
     documents={}
 
     # initialize some basic stuff
