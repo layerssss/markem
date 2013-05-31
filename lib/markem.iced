@@ -178,9 +178,9 @@ module.exports = class markem
             target:target
             globals:globals
           document.path=document.pathFile.replace(/\/index\.html$/,'/')
-          document.root=path.relative document.path.replace(/\/[^\/]*$/,'/'),'\/'
-          if !document.root.length
-            document.root='.'
+          document.rootPath=path.relative document.path.replace(/\/[^\/]*$/,'/'),'\/'
+          if !document.rootPath.length
+            document.rootPath='.'
           documents[document.path]=document
           await fs.readFile path.join(@source, relative),'utf8',defer err,document.source
           await fs.stat path.join(@source, relative), defer err, document.stats
