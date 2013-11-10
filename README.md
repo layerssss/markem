@@ -1,5 +1,10 @@
 Markem
 ==================================================
+
+<meta name="description" content="Zero-Configuration Static Site Generator"/>
+<meta name="keywords" content=""/>
+<meta name="author" content="Michael Yin <layerssss@gmail.com>"/>
+
 Zero-Configuration Static Site Generator
 
 By Michael Yin
