@@ -1,16 +1,16 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Markem</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="Zero-Configuration Static Site Generator"><meta name="keywords" content="nodejs,handsome guy"><meta name="author" content="Michael Yin"><link rel="stylesheet" href="./css/bootstrap.css"><style>body {
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Markem</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="DESCRIPTION"><meta name="keywords" content="KEYWORDS"><meta name="author" content="AUTHOR"><link rel="stylesheet" href="./css/bootstrap.css"><style>body {
   padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
 }
 #github{
   z-index:10000;
   position:fixed;
-  right:0;
+  left:0;
   top:0;
-}</style><link rel="stylesheet" href="./css/bootstrap-responsive.css"></head><body><div class="navbar navbar-inverse navbar-fixed-top"><div class="navbar-inner"><div class="container"><a data-toggle="collapse" data-target=".nav-collapse" class="btn btn-navbar"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></a><a href="./" class="brand">markem</a><div class="nav-collapse collapse"><ul class="nav"></ul></div></div></div></div><div class="container"><artical><h1>Markem</h1>
+}</style><link rel="stylesheet" href="./css/bootstrap-responsive.css"></head><body><div class="navbar navbar-inverse navbar-fixed-top"><div class="navbar-inner"><div class="container"><a data-toggle="collapse" data-target=".nav-collapse" class="btn btn-navbar"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></a><a href="./" class="brand">Hello</a><div class="nav-collapse collapse"><ul class="nav"></ul></div></div></div></div><div class="container"><artical><h1 id="markem">Markem</h1>
 <p>Zero-Configuration Static Site Generator</p>
 <p>By Michael Yin</p>
 <p>Markem is a zero-configuration, markdown based, simple, Github-friendly, static site generator and publisher. There&#39;s only one template needed to generate hell a lot of self-hyperlinked documents and push them to your GithubPage. Or if you feel lazy to setup layout, we got a few skeletons for you. </p>
-<h2>How to generate a personal page in 10 seconds?</h2>
+<h2 id="how-to-generate-a-personal-page-in-10-seconds-">How to generate a personal page in 10 seconds?</h2>
 <p>Let&#39;s assume you have all your documents prepared as markdown format in one of your Github repo. (and you didn&#39;t forget README.md)</p>
 <p>And, make sure you have nodejs installed.</p>
 <p>Then install markem through npm:</p>
@@ -32,9 +32,9 @@ Generating content...
 Pushing back into origin...
 Done.</code></pre>
 <p>There you go, wait for a few minutes(if its the first time you markem), then you can see your page on <a href="http://**USERNAME**.gitub.com/**REPONAME**/">http://**USERNAME**.gitub.com/**REPONAME**/</a>.</p>
-<h2>How it works?</h2>
+<h2 id="how-it-works-">How it works?</h2>
 <p>Thanks to Github for providing us such a excellant service. Read more about it on <a href="https://help.github.com/articles/what-are-github-pages">Github Help</a></p>
-<h2>How does it compare to other site generators?</h2>
+<h2 id="how-does-it-compare-to-other-site-generators-">How does it compare to other site generators?</h2>
 <p>Markem don&#39;t mess up with your repo stucture. All the configuraion is in markem.conf. You can place your docs all arroud in your repo. Yeah, anywhere. Then readers can both read your docs on your page or fork&amp;edit then on github.com.</p>
 <p>Ok, markem is just a tool simply can turns markdowns into html, and push them back to github. It&#39;s not designated to make a real website/press. It&#39;s a tool for really really busy UNIX hackers who&#39;s busy hacking on something else, and have no time to write layouts and configuration for a little bunch of docs/slides. So we can in NO WAY call it a CMS, comparing to other tools.</p>
 <p>If you need more functionalities, here are some other great tools for you:</p>
@@ -42,18 +42,18 @@ Done.</code></pre>
 <li><a href="http://jekyllrb.com/">jekyll</a> site generator from Github, in Ruby</li>
 <li><a href="https://github.com/bevry/docpad">docpad</a> flexible site generator make in nodejs, with lots of plugins&amp;skeletons</li>
 </ul>
-<h2>What if I want to make a USERNAME.github.com page?</h2>
+<h2 id="what-if-i-want-to-make-a-username-github-com-page-">What if I want to make a USERNAME.github.com page?</h2>
 <p>Good, markem works fine in this case. You just need to put your docs in a git branch other than &#39;master&#39; (e.g. &#39;docs&#39;). And markem will change your target branch from &#39;gh-pages&#39; to &#39;master&#39;.</p>
-<h2>Features</h2>
+<h2 id="features">Features</h2>
 <ul>
 <li>use only one layout.jade as your template </li>
 <li>static files support</li>
 <li>automatic publishing</li>
 <li>pre-made skeletons!</li>
 </ul>
-<h2>Installation</h2>
+<h2 id="installation">Installation</h2>
 <pre><code>sudo npm install markem -g</code></pre>
-<h2>Usage</h2>
+<h2 id="usage">Usage</h2>
 <pre><code>  Usage: markem [options]
 
   Options:
@@ -64,9 +64,9 @@ Done.</code></pre>
     -v, --verbose       output additional logs
     -s, --source &lt;dir&gt;  use specific doc source instead of cwd
     -j, --json &lt;json&gt;   additional data bound to globals</code></pre>
-<h2>License</h2>
+<h2 id="license">License</h2>
 <p>(The MIT License)</p>
-<p>Copyright (c) 2012-2012 Michael Yin <a href="&#x6d;&#97;&#x69;&#x6c;&#x74;&#111;&#x3a;&#108;&#97;&#x79;&#x65;&#x72;&#x73;&#x73;&#115;&#115;&#64;&#x67;&#109;&#x61;&#x69;&#x6c;&#x2e;&#x63;&#x6f;&#109;">&#108;&#97;&#x79;&#x65;&#x72;&#x73;&#x73;&#115;&#115;&#64;&#x67;&#109;&#x61;&#x69;&#x6c;&#x2e;&#x63;&#x6f;&#109;</a></p>
+<p>Copyright (c) 2012-2012 Michael Yin <a href="&#109;&#x61;&#105;&#108;&#116;&#x6f;&#58;&#108;&#x61;&#x79;&#x65;&#x72;&#x73;&#x73;&#x73;&#x73;&#64;&#x67;&#109;&#97;&#x69;&#108;&#46;&#99;&#x6f;&#x6d;">&#108;&#x61;&#x79;&#x65;&#x72;&#x73;&#x73;&#x73;&#x73;&#64;&#x67;&#109;&#97;&#x69;&#108;&#46;&#99;&#x6f;&#x6d;</a></p>
 <p>Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
 &#39;Software&#39;), to deal in the Software without restriction, including
@@ -83,4 +83,4 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
-</artical><footer><p>© 2012  Michael Yin</p></footer></div><script src="./js/jquery.js"></script><script src="./js/bootstrap.js"></script><script src="./js/modernizr.js"></script><a id="github" href="https://github.com/layerssss/markem/blob/master/README.md"><img src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub"></a></body></html>
+</artical><footer><p>© 2012</p></footer></div><script src="./js/jquery.js"></script><script src="./js/bootstrap.js"></script><script src="./js/modernizr.js"></script><a id="github" href="https://github.com/layerssss/markem/blob/master/README.md"><img src="http://s3.amazonaws.com/github/ribbons/forkme_left_red_aa0000.png" alt="Fork me on GitHub"></a></body></html>
