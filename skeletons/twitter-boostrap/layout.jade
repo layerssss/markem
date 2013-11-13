@@ -28,11 +28,11 @@ html(lang='en')
             span.icon-bar
             span.icon-bar
           a.navbar-brand(href='#{rootPath}/')=globals.root.title
-          .navbar-collapse.collapse
-            ul.nav.navbar-nav
-              for dir in globals.root.dirs
-                li(class=path==dir.path?'active':undefined)
-                  a(href='#{rootPath}#{dir.path}') #{dir.title}
+        .navbar-collapse.collapse
+          ul.nav.navbar-nav
+            for dir in globals.root.dirs
+              li(class=path==dir.path?'active':undefined)
+                a(href='#{rootPath}#{dir.path}') #{dir.title}
     .container
       article !{content}
       for dir in dirs
