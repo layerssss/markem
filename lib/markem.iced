@@ -56,13 +56,17 @@ module.exports = class markem
       process.exit 1
       return
 
-    if !options.out?
-      # detect Git remote
-      await @_git ['remote', '-v'], @source, defer e, out
-      fetch = out.match(/origin\s+([^\s]+)\s+\(fetch\)/)[1]
+
+    # detect Git remote
+    await @_git ['remote', '-v'], @source, defer e, out
+    fetch = out.match(/origin\s+([^\s]+)\s+\(fetch\)/)?[1]
+    if fetch
       @repo = fetch.match(/([0-9a-z\-\_\.]+\/[0-9a-z\-\_\.]+)\.git/i)?[1]
-      console.log "git url: #{fetch}"
+      console.log "git url: #{fetch}" 
       console.log "repo: #{@repo}" if @repo
+
+    if !options.out?
+      return cb new Error 'not a git repo' unless fetch
 
       # detect GithubPage branch
       branch = 'gh-pages'
