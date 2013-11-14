@@ -219,6 +219,7 @@ module.exports = class markem
           document.parent.dirs.push document
         else
           document.parent.files.push document
+      document.document = document
 
     try
       markemConf = require path.join process.cwd(), 'markem.conf'
