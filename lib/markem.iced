@@ -220,6 +220,8 @@ module.exports = class markem
         else
           document.parent.files.push document
       document.document = document
+      document.files.sort()
+      document.dirs.sort()
 
     try
       markemConf = require path.join process.cwd(), 'markem.conf'
