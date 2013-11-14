@@ -189,6 +189,7 @@ module.exports = class markem
             pathFile: '/'+path.relative(@tmp, target)
             target: target
             globals: globals
+            slug: String target.match /[^\/]*$/
           document.path = document.pathFile.replace(/\/index\.html$/, '/')
           document.rootPath = path.relative document.path.replace(/\/[^\/]*$/, '/'), '\/'
           if !document.rootPath.length
@@ -220,8 +221,12 @@ module.exports = class markem
         else
           document.parent.files.push document
       document.document = document
-      document.files.sort()
-      document.dirs.sort()
+      slugComparer = (a, b)-> 
+        return -1 if a.slug < b.slug
+        return 1 if a.slug > b.slug
+        return 0
+      document.files.sort slugComparer
+      document.dirs.sort slugComparer
 
     try
       markemConf = require path.join process.cwd(), 'markem.conf'
