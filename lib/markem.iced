@@ -182,6 +182,7 @@ module.exports = class markem
         if relative.match new RegExp("readme\\.md$", 'i')
           target = path.join @tmp, relative.replace new RegExp("[^#{path.sep}]*$"), 'index.html'
         if target?
+          target = target.replace /(^|\/)[\.\-\_0-9]+/g, (m, m1)-> m1
           document = 
             dirs: []
             files: []
@@ -221,12 +222,12 @@ module.exports = class markem
         else
           document.parent.files.push document
       document.document = document
-      slugComparer = (a, b)-> 
-        return -1 if a.slug < b.slug
-        return 1 if a.slug > b.slug
+      documentComparer = (a, b)-> 
+        return -1 if a.pathSource < b.pathSource
+        return 1 if a.pathSource > b.pathSource
         return 0
-      document.files.sort slugComparer
-      document.dirs.sort slugComparer
+      document.files.sort documentComparer
+      document.dirs.sort documentComparer
 
     try
       markemConf = require path.join process.cwd(), 'markem.conf'
