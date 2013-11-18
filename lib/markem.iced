@@ -157,11 +157,6 @@ module.exports = class markem
       continue if file in ['.git']
       await @_spawn 'rm',  ['-Rf', path.join(@tmp, file)],  defer e
 
-    await fs.readdir path.join(@source, 'markem.conf'), defer e,  list
-    for file in list
-      continue if file  in ['layout.jade']
-      await @_spawn 'cp',  ['-R',  path.join(@source, 'markem.conf', file),  @tmp],  defer e
-
     await utils.scandir
       path: @source
       readFiles: false
@@ -198,6 +193,15 @@ module.exports = class markem
           documents[document.path] = document
           await fs.readFile path.join(@source,  relative), 'utf8', defer e, document.source
           await fs.stat path.join(@source,  relative),  defer e, document.stats
+        else
+          continue if relative in ['markem.conf/layout.jade']
+          await fs.readFile path.join(@source, relative), defer e, data
+          return cb e if e
+          target = path.join @tmp, relative.replace /^markem\.conf\//, ''
+          await mkdirp (path.dirname target), defer e
+          cb e if e
+          await fs.writeFile target, data, defer e
+          return cb e if e
 
 
     # build relationships, content, title between documents
