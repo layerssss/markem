@@ -1,6 +1,6 @@
 {
   "name": "markem",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "description": "",
   "author": {
     "name": "Michael Yin",
@@ -20,8 +20,7 @@
     "commander": "*",
     "mkdirp": "*",
     "marked": "*",
-    "node-html-encoder": "*",
-    "progress-bar": "*"
+    "node-html-encoder": "*"
   },
   "readmeFilename": "README.md"
 }
