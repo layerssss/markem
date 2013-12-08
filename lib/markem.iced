@@ -1,4 +1,4 @@
-utils = require 'bal-util'
+
 mkdirp = require 'mkdirp'
 path = require 'path'
 jade = require 'jade'
@@ -14,15 +14,13 @@ module.exports = class markem
   @version:  require('../package.json').version
   @options: null
   @run: (options,cb)->
-
-
     @options = options
     @tmp = options.out||'markem.out'
     @source = path.resolve options.source||'.'
     @json = JSON.parse options.json||'{}'
 
     # serving skeletons
-    await fs.exists path.join(@source, 'markem.conf', 'layout.jade'), defer exists
+    await fs.exists path.join(@source, 'markem.conf'), defer exists
     if !exists
       await fs.readdir path.join(__dirname, '..', 'skeletons'), defer e, layouts
       layouts = layouts.filter (layout)-> !layout.match /^\./
@@ -37,24 +35,38 @@ module.exports = class markem
       try
         layout = layouts[Number(input)-1]
       catch e
-        console.log e.message
+        return cb e
       process.stdin.pause()
       if !layout?
-        process.exit 1
-        return
+        return cb new Error 'not a valid input'
       await mkdirp 'markem.conf', defer e
-      await utils.cpdir path.join(__dirname, '..', 'skeletons', layout), path.join(@source, 'markem.conf'), defer e
+      return cb e if e
+      await @depthFirstTraverse path.join(__dirname, '..', 'skeletons', layout), defer e, files, directories
+      return cb e if e
+      directories.reverse()
+      for item in directories
+        item_new = item.substring path.join(__dirname, '..', 'skeletons', layout).length
+        item_new = path.join(@source, 'markem.conf') + item_new
+        await fs.mkdir item_new, defer e
+        return cb e if e
+      for item in files
+        item_new = item.substring path.join(__dirname, '..', 'skeletons', layout).length
+        item_new = path.join(@source, 'markem.conf') + item_new
+        await fs.readFile item, defer e, data
+        return cb e if e
+        await fs.writeFile item_new, data, defer e
+        return cb e if e
+      return cb e if e
       console.log "'markem.conf' created."
 
     # prepare template
     await fs.readFile path.join(@source, 'markem.conf', 'layout.jade'), 'utf8', defer e, layout
+    return cb e if e
     try
       layout = jade.compile layout, 
         filename:path.join(@source, 'markem.conf', 'layout.jade')
     catch e
-      console.error e
-      process.exit 1
-      return
+      return cb e
 
 
     # detect Git remote
@@ -72,16 +84,25 @@ module.exports = class markem
       branch = 'gh-pages'
       if fetch.match /\.github\.com|\.github\.io/
         branch = 'master'
-
       # make sure users dont put documents in their GithubPage branch
       await @_git ['status'], @source, defer e, out
       curBranch = out.match(/on\s*branch\s*([^\s]*)/i)[1]
       if curBranch == branch
-        console.error "You are in target branch '#{branch}'. Put your documents in another branch!!!"
+        return cb new Error "You are in target branch '#{branch}'. Please put your documents in another branch."
 
       # get current gh-pages (make sure git clone done well)
       await mkdirp @tmp, defer e
-      await utils.rmdirDeep @tmp, defer e
+      return cb e if e
+      await @depthFirstTraverse @tmp, defer e, files, directories
+      return cb e if e
+      for file in files
+        await fs.unlink file, defer e
+        return cb e if e
+      for file in directories
+        await fs.rmdir file, defer e
+        return cb e if e
+      await fs.rmdir @tmp, defer e
+
       console.log "Cloning branch '#{branch}' into '#{@tmp}'"
       await @_git ['clone', '--branch', branch, fetch, @tmp], null, defer e, out
 
@@ -97,23 +118,46 @@ module.exports = class markem
 
     # generate content
     console.log "Generating content..."
-    await @_generate layout, defer()
+    await @_generate layout, defer e
+    return cb e if e
 
     if !options.out?
       # commit&push back to Github
       await @_git ['add', '--all'], @tmp, defer e
       await @_git ['commit', '-m', 'compiled by markem'], @tmp, defer e, out
-      console.log out
+      console.log out||''
       console.log "Pushing back into origin..."
       await @_git ['push', 'origin', branch], @tmp, defer e
+      return cb e if e
 
-
-
-
-      await utils.rmdirDeep @tmp, defer e
+      await @depthFirstTraverse @tmp, defer e, files, directories
+      return cb e if e
+      for file in files
+        await fs.unlink file, defer e
+        return cb e if e
+      for file in directories
+        await fs.rmdir file, defer e
+        return cb e if e
+      await fs.rmdir @tmp, defer e
       console.log "Done."
 
     cb()
+
+  @depthFirstTraverse: (pathname, cb)->
+    files = []
+    directories = []
+    await fs.readdir pathname, defer e, list
+    return cb e if e
+    for item in list
+      pathname_new = (path.join pathname, item)
+      await @depthFirstTraverse pathname_new, defer e, files_new, directories_new
+      if e
+        files.push pathname_new
+      else
+        files.push file for file in files_new
+        directories.push directory for directory in directories_new
+        directories.push pathname_new
+    cb null, files, directories
 
   # calling git commands
   # params:
@@ -122,23 +166,18 @@ module.exports = class markem
   # callback:
   #     cb(err, stdout, stderr)
   @_git: (command, workTree, cb)->
+    args = command
     if workTree?
-      args = [
-        '--work-tree'
-        workTree
-        '--git-dir' 
-        path.join workTree, '.git'
-      ]
-      args.push c for c in command
+      await @_spawn workTree, 'git', args, defer e, stdout
     else
-      args = command
-    await @_spawn 'git', args, defer e, stdout
+      await @_spawn null, 'git', args, defer e, stdout
+
     cb e,  stdout
 
-  @_spawn: (exec,  args,  cb)->
-    console.log "> #{exec} #{args.join ' '}" if @options.verbose
+  @_spawn: (wd, exec,  args,  cb)->
+    console.log "#{wd||''}> #{exec} #{args.join ' '}" if @options.verbose
     proc = childprocess.spawn exec,  args, 
-      cwd: process.cwd()
+      cwd: wd
     proc.stdout.setEncoding 'utf8'
     proc.stderr.setEncoding 'utf8' 
     out = []
@@ -149,26 +188,32 @@ module.exports = class markem
     proc.stderr.on 'data', (data)->
       process.stderr.write data if self.options.verbose
       out.push data
-    await proc.on 'close',  defer e
-    cb e,  out.join ''
+    await proc.on 'close',  defer code
+    if code
+      return cb new Error out.join ''
+    cb null, out.join ''
   @_generate: (layout, cb)->
-    await fs.readdir @tmp, defer e,  list
-    for file in list
-      continue if file in ['.git']
-      await @_spawn 'rm',  ['-Rf', path.join(@tmp, file)],  defer e
+    await @depthFirstTraverse @tmp, defer e, files, directories
+    return cb e if e
+    for file in files
+      continue if 0 == file.indexOf path.join @tmp, '.git'
+      await fs.unlink file, defer e
+      return cb e if e
+    for file in directories
+      continue if 0 == file.indexOf path.join @tmp, '.git'
+      await fs.rmdir file, defer e
+      return cb e if e
 
-    await utils.scandir
-      path: @source
-      readFiles: false
-      ignoreHiddenFiles: true
-      next: defer e, list
+    await @depthFirstTraverse @source, defer e, files, directories
+    return cb e if e
     globals = @json
     globals.repo = @repo
     documents = {}
 
     # initialize some basic stuff
-    for relative, type of list
-      if type == 'file'&&!relative.match /node_modules/
+    for file in files
+      relative = file.substring @source.length + 1
+      unless (relative.match /(^|\/|\\)\./)||(relative.match /node_modules/)
         target = null
         if relative.match /\.markdown$/
           target = path.join @tmp, relative.replace /\.markdown$/, '.html'
@@ -238,6 +283,7 @@ module.exports = class markem
     catch e
     if markemConf? and markemConf.preRender?
       await markemConf.preRender globals, defer e
+      return cb e if e
 
     # render each documents
     for p, document of documents
@@ -247,9 +293,6 @@ module.exports = class markem
       try
         document.output = layout document
       catch e
-        console.error e
-        utils.rmdirDeep @tmp, ->
-        process.exit 1
-        return
+        return cb e
       await fs.writeFile document.target, document.output, 'utf8', defer e
     cb()

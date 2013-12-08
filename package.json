@@ -1,6 +1,6 @@
 {
   "name": "markem",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "description": "",
   "author": {
     "name": "Michael Yin",
@@ -18,10 +18,9 @@
     "iced-coffee-script": "*",
     "jade": "*",
     "commander": "*",
-    "bal-util": "*",
     "mkdirp": "*",
     "marked": "*",
-    "node-html-encoder": "0.0.2"
+    "node-html-encoder": "*"
   },
   "readmeFilename": "README.md"
 }

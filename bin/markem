@@ -12,4 +12,9 @@ program
   .option('-j, --json <json>', 'additional data bound to globals');
 
 program.parse(process.argv);
-markem.run(program,function(){});
+markem.run(program,function(e){ 
+  if(e){ 
+    console.error(e.message);
+    process.exit(1);
+  }
+});
