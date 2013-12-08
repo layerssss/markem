@@ -6,7 +6,7 @@ fs = require 'fs'
 marked = require 'marked'
 childprocess = require 'child_process'
 html_encoder = require 'node-html-encoder'
-
+progress_bar = require 'progress-bar'
 
 entityEncoder = new html_encoder.Encoder 'entity'
 
@@ -211,8 +211,11 @@ module.exports = class markem
     globals.repo = @repo
     documents = {}
 
+    bar = progress_bar.create process.stdout, 100
+    bar.format = '$bar; $percentage;% loading... '
     # initialize some basic stuff
-    for file in files
+    for file, i in files
+      bar.update (i+1) / files.length
       relative = file.substring @source.length + 1
       unless (relative.match /(^|\/|\\)\./)||(relative.match /node_modules/)
         target = null
@@ -248,7 +251,7 @@ module.exports = class markem
           cb e if e
           await fs.writeFile target, data, defer e
           return cb e if e
-
+    console.log 'ok.'
 
     # build relationships, content, title between documents
     for p, document of documents
