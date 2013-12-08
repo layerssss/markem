@@ -1,0 +1,49 @@
+!!! 5
+html(lang='en')
+  head
+      meta(charset='utf-8')
+      title #{title}
+      meta(name='viewport', content='width=device-width, initial-scale=1.0')
+      meta(name="description",content=mete.description)
+      meta(name="keywords",content=mete.keywords)
+      meta(name="author",content=mete.author)
+      link(rel='stylesheet',href='#{rootPath}/css/bootstrap.min.css')
+      style.
+        body {
+          padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        }
+        #github{
+          z-index:10000;
+          position:fixed;
+          left:0;
+          top:0;
+        }
+  body
+    .navbar.navbar-inverse.navbar-fixed-top
+      .container
+        .navbar-header
+          button.navbar-toggle(data-toggle='collapse', data-target='.navbar-collapse')
+            span.sr-only Toggle navigation
+            span.icon-bar
+            span.icon-bar
+            span.icon-bar
+          a.navbar-brand(href='#{rootPath}/')=globals.root.title
+        .navbar-collapse.collapse
+          ul.nav.navbar-nav
+            for dir in globals.root.dirs
+              li(class=path==dir.path?'active':undefined)
+                a(href='#{rootPath}#{dir.path}') #{dir.title}
+    .container
+      article !{content}
+      for dir in dirs
+        p
+          a(href='#{rootPath}#{dir.path}') #{dir.title}
+      for file in files
+        p
+          a(href='#{rootPath}#{file.path}') #{file.title}
+      footer
+        p
+          | © 2012 #{mete.author||''}
+    script(src='#{rootPath}/js/bootstrap.min.js')
+    a(id="github",href="https://github.com/#{globals.repo}/blob/master#{pathSource}")
+      img(src="http://s3.amazonaws.com/github/ribbons/forkme_left_red_aa0000.png",alt="Fork me on GitHub")
