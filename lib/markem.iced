@@ -15,7 +15,8 @@ module.exports = class markem
   @options: null
   @run: (options,cb)->
     @options = options
-    @tmp = options.out||'markem.out'
+    @tmp = path.resolve options.out||'markem.out'
+
     @source = path.resolve options.source||'.'
     @json = JSON.parse options.json||'{}'
 
