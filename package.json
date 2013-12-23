@@ -1,6 +1,6 @@
 {
   "name": "markem",
-  "version": "0.0.25",
+  "version": "0.0.27",
   "description": "",
   "author": {
     "name": "Michael Yin",
@@ -15,12 +15,12 @@
     "url": "git://github.com/layerssss/markem.git"
   },
   "dependencies": {
-    "iced-coffee-script": "*",
-    "jade": "*",
-    "commander": "*",
-    "mkdirp": "*",
-    "marked": "*",
-    "node-html-encoder": "*"
+    "iced-coffee-script": "1.6.3-f",
+    "jade": "0.35.0",
+    "commander": "2.0.0",
+    "mkdirp": "0.3.5",
+    "marked": "0.2.10",
+    "node-html-encoder": "0.0.2"
   },
   "readmeFilename": "README.md"
 }
