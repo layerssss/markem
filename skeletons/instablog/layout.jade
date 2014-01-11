@@ -1,0 +1,24 @@
+extends frame
+block head
+  title=title
+  meta(name='description', content=source.substring(0,200))
+block header
+  if files
+    for file in files
+      h4
+        small #{file.hidden.replace(/\-$/, '')}
+        a(href='#{rootPath}#{file.path}') #{file.title} 
+block content
+  #gistbody.instapaper_body.entry-content
+    if path!='/'
+      div!=content
+      p leave comments via a 
+        a(href='https://github.com/#{globals.repo}/edit/master#{pathSource}') [pull-request]
+        | 
+        a(href='https://github.com/#{globals.repo}/issues/new?title=#{encodeURIComponent("about "+title)}') [issue]
+        | 
+        a(href='https://github.com/#{globals.repo}/blame/master#{pathSource}') [blame]
+  div!=globals.root.content
+  if path!='/'
+    p
+      a(href='#{rootPath}/') [all posts]

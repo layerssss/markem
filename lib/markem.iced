@@ -223,13 +223,17 @@ module.exports = class markem
         if relative.match new RegExp("readme\\.md$", 'i')
           target = path.join @tmp, relative.replace new RegExp("[^#{path.sep}]*$"), 'index.html'
         if target?
-          target = target.replace /(^|\/)[\.\-\_0-9]+/g, (m, m1)-> m1
+          hidden = ''
+          target = target.replace /(^|\/)[\.\-\_0-9]+/g, (m, m1)-> 
+            hidden = m.substring m1.length
+            m1
           document = 
             dirs: []
             files: []
             pathSource: '/'+relative
             pathFile: '/'+path.relative(@tmp, target)
             target: target
+            hidden: hidden
             globals: globals
             slug: String target.match /[^\/]*$/
           document.path = document.pathFile.replace(/\/index\.html$/, '/')
